@@ -4,5 +4,5 @@ variable "cidr" {
 }
 
 variable "cluster_name" {
-  default = "tf-eks-cluster"
+  default = "p41-eks-cluster"
 }
