@@ -1,0 +1,87 @@
+name: CI-CD-EKS
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  CLUSTER_NAME: particle41-eks
+  AWS_REGION: self-hosted1
+  IMAGE_NAME: simpletimeservice
+
+jobs:
+  build-and-deploy:
+    runs-on: 
+
+    steps:
+    # ------------------------
+    # Checkout code
+    # ------------------------
+    - name: Checkout repo
+      uses: actions/checkout@v4
+
+    # ------------------------
+    # Docker Hub login
+    # ------------------------
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    # ------------------------
+    # Build & push multi-arch image
+    # ------------------------
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v6
+      with:
+        context: ./app
+        push: true
+        tags: |
+          ${{ secrets.DOCKERHUB_USERNAME }}/simpletimeservice:latest
+        platforms: linux/amd64,linux/arm64
+
+    # ------------------------
+    # Configure AWS credentials
+    # ------------------------
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
+    # ------------------------
+    # Terraform init & apply
+    # ------------------------
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+
+    - name: Terraform Init
+      working-directory: terraform
+      run: terraform init
+
+    - name: Terraform Apply
+      working-directory: terraform
+      run: terraform apply -auto-approve
+
+    # ------------------------
+    # Update kubeconfig
+    # ------------------------
+    - name: Update kubeconfig
+      run: |
+        aws eks update-kubeconfig \
+          --region $AWS_REGION \
+          --name $CLUSTER_NAME
+
+    # ------------------------
+    # Deploy to Kubernetes
+    # ------------------------
+    - name: Deploy application
+      run: |
+        kubectl apply -f app/kubernetes/
+        kubectl rollout status deployment/simpletimeservice
