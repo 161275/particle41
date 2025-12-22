@@ -7,12 +7,12 @@ on:
 
 env:
   CLUSTER_NAME: particle41-eks
-  AWS_REGION: self-hosted1
+  AWS_REGION: us-east-1
   IMAGE_NAME: simpletimeservice
 
 jobs:
   build-and-deploy:
-    runs-on: 
+    runs-on: self-hosted1
 
     steps:
     # ------------------------
