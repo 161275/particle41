@@ -26,7 +26,7 @@ module "eks" {
       # Starting on 1.30, AL2023 is the default AMI type for EKS managed node groups
       ami_type       = "AL2023_x86_64_STANDARD"
       instance_types = ["t3.small"]
-      min_size     = 2
+      min_size     = 1
       max_size     = 4
       desired_size = 2
       subnet_ids = [aws_subnet.subnet3.id, aws_subnet.subnet4.id]
