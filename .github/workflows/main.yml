@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 env:
-  CLUSTER_NAME: particle41-eks
+  CLUSTER_NAME: p41-eks-cluster
   AWS_REGION: us-east-1
   IMAGE_NAME: simpletimeservice
 
